@@ -1,4 +1,5 @@
 const gulp = require('gulp')
+const del = require('del')
 const gulpPug = require('gulp-pug')
 const sass = require('gulp-sass')(require('sass')); // подключаем sass
 const gulpPlumber = require('gulp-plumber') // позволяет серверу работать даже если есть ошибка в файлах
@@ -6,7 +7,11 @@ const gulpBabel = require('gulp-babel') // оптимизирует js код д
 const gulpUglify = require('gulp-uglify') // добавляет минификацию js файлов
 const gulpAutoprefixer = require('gulp-autoprefixer') // добавляет префиксы для старых браузеров
 const gulpCleanCss = require('gulp-clean-css') // добавляет минификацию css файлов
+const browserSync = require('browser-sync').create() // добавляет минификацию css файлов
 
+function clean() {
+    return del('dist');
+}
 
 function pug2html() {
     return gulp.src('dev/pug/pages/*.pug')
@@ -23,8 +28,9 @@ function scss2css() {
         .pipe(gulpPlumber())
         .pipe(sass())
         .pipe(gulpAutoprefixer())
-        .pipe(gulpCleanCss())
+        .pipe(gulpCleanCss({level: 2}))
         .pipe(gulpPlumber.stop())
+        .pipe(browserSync.stream())
         .pipe(gulp.dest('dist/static/css/'));
 }
 
@@ -34,7 +40,21 @@ function script() {
             presets: ['@babel/env']
         }))
         .pipe(gulpUglify())
+        .pipe(browserSync.stream())
         .pipe(gulp.dest('dist/static/js/'));
 }
 
-exports.default = gulp.series(pug2html, scss2css, script);
+function watch() {
+    browserSync.init({
+        server: {
+            baseDir:"dist"
+        }
+    });
+
+    gulp.watch("dev/pug/**/*.pug", pug2html);
+    gulp.watch("dev/static/styles/**/*.scss", scss2css);
+    gulp.watch("dev/static/js/main.js", script);
+    gulp.watch("dist/*.html").on('change', browserSync.reload);
+}
+
+exports.default = gulp.series(clean, pug2html, scss2css, script, watch);
