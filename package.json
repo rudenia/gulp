@@ -15,9 +15,15 @@
     "gulp-plumber": "^1.2.1",
     "gulp-pug": "^5.0.0",
     "gulp-sass": "^5.0.0",
+    "gulp-uglify": "^3.0.2",
     "sass": "^1.37.5"
   },
   "browserslist": [
     "Last 4 versions"
-  ]
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "gulp-babel": "^8.0.0"
+  }
 }
