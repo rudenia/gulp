@@ -8,7 +8,12 @@ const gulpUglify = require('gulp-uglify') // добавляет минифика
 const gulpImagemin = require('gulp-imagemin') // уменьшаем размер изображений
 const gulpAutoprefixer = require('gulp-autoprefixer') // добавляет префиксы для старых браузеров
 const gulpCleanCss = require('gulp-clean-css') // добавляет минификацию css файлов
+const svgSprite = require('gulp-svg-sprite') // пакеты для работы с svg файлами
+const svgMin = require('gulp-svgmin') // пакеты для работы с svg файлами
+const cheerio = require('gulp-cheerio') // пакеты для работы с svg файлами
+const replace = require('gulp-replace') // пакеты для работы с svg файлами
 const browserSync = require('browser-sync').create() // добавляет минификацию css файлов
+
 
 function clean() {
     return del('dist');
@@ -63,6 +68,32 @@ function imageMin() {
         .pipe(gulp.dest('dist/static/images/'));
 }
 
+function svgSpriteBuild() {
+    return gulp.src('dev/static/images/sprite/*.svg')
+        .pipe(svgMin({
+            js2svg: {
+                pretty: true
+            }
+        }))
+        .pipe(cheerio({
+            run: function ($) {
+                $('[fill]').removeAttr('fill');
+                $('[stroke]').removeAttr('stroke');
+                $('[style]').removeAttr('style');
+            },
+            parserOptions: {xmlMode: true}
+        }))
+        .pipe(replace('&gt;', '>'))
+        .pipe(svgSprite({
+            mode: {
+                symbol: {
+                    sprite: "sprite.svg"
+                }
+            }
+        }))
+        .pipe(gulp.dest('dist/static/images/sprite'));
+}
+
 function watch() {
     browserSync.init({
         server: {
@@ -72,9 +103,10 @@ function watch() {
 
     gulp.watch("dev/pug/**/*.pug", pug2html);
     gulp.watch("dev/static/styles/**/*.scss", scss2css);
-    gulp.watch("dev/static/images/**/*.{jpg,png,gif,svg}", imageMin);
+    gulp.watch("[dev/static/images/**/*.{jpg,png,gif,svg},!dev/static/images/sprite/*]", imageMin);
+    gulp.watch("dev/static/images/sprite/*", svgSpriteBuild);
     gulp.watch("dev/static/js/main.js", script);
     gulp.watch("dist/*.html").on('change', browserSync.reload);
 }
 
-exports.default = gulp.series(clean, pug2html, scss2css, imageMin, script, watch);
+exports.default = gulp.series(clean, pug2html, scss2css, imageMin, svgSpriteBuild, script, watch);
