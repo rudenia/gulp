@@ -8,12 +8,15 @@ const gulpUglify = require('gulp-uglify') // добавляет минифика
 const gulpImagemin = require('gulp-imagemin') // уменьшаем размер изображений
 const gulpAutoprefixer = require('gulp-autoprefixer') // добавляет префиксы для старых браузеров
 const gulpCleanCss = require('gulp-clean-css') // добавляет минификацию css файлов
+const gulpIf = require('gulp-if') // разбиваем сборку на dev и build
 const svgSprite = require('gulp-svg-sprite') // пакеты для работы с svg файлами
 const svgMin = require('gulp-svgmin') // пакеты для работы с svg файлами
 const cheerio = require('gulp-cheerio') // пакеты для работы с svg файлами
 const replace = require('gulp-replace') // пакеты для работы с svg файлами
 const gulpConcat = require('gulp-concat') // объединяет стороние js файлы
 const browserSync = require('browser-sync').create() // добавляет минификацию css файлов
+
+let isBuildFlag = false;
 
 
 function clean() {
@@ -51,7 +54,7 @@ function script() {
         .pipe(gulpBabel({
             presets: ['@babel/env']
         }))
-        .pipe(gulpUglify())
+        .pipe(gulpIf(isBuildFlag, gulpUglify()))
         .pipe(browserSync.stream())
         .pipe(gulp.dest('dist/static/js/'));
 }
@@ -112,6 +115,13 @@ function svgSpriteBuild() {
         .pipe(gulp.dest('dist/static/images/sprite'));
 }
 
+function setMode(isBuild) {
+    return cb=> {
+        isBuildFlag = isBuild;
+        cb();
+    }
+}
+
 function watch() {
     browserSync.init({
         server: {
@@ -127,4 +137,7 @@ function watch() {
     gulp.watch("dist/*.html").on('change', browserSync.reload);
 }
 
-exports.default = gulp.series(clean, fonts, pug2html, scss2css, imageMin, svgSpriteBuild, script, vendors, watch);
+const dev = gulp.parallel(fonts, pug2html, scss2css, imageMin, svgSpriteBuild, script, vendors)
+
+exports.default = gulp.series(clean, dev, watch);
+exports.build = gulp.series(clean, setMode(true), dev);
