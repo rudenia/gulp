@@ -19,6 +19,11 @@ function clean() {
     return del('dist');
 }
 
+function fonts() {
+    return gulp.src('dev/static/fonts/**/*.*')
+        .pipe(gulp.dest('dist/static/fonts'));
+}
+
 function pug2html() {
     return gulp.src('dev/pug/pages/*.pug')
         .pipe(gulpPlumber())
@@ -109,4 +114,4 @@ function watch() {
     gulp.watch("dist/*.html").on('change', browserSync.reload);
 }
 
-exports.default = gulp.series(clean, pug2html, scss2css, imageMin, svgSpriteBuild, script, watch);
+exports.default = gulp.series(clean, fonts, pug2html, scss2css, imageMin, svgSpriteBuild, script, watch);
