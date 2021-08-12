@@ -43,7 +43,7 @@ function scss2css() {
         .pipe(gulpPlumber())
         .pipe(sass())
         .pipe(gulpAutoprefixer())
-        .pipe(gulpCleanCss({level: 2}))
+        .pipe(gulpIf(isBuildFlag, gulpCleanCss({level: 2})))
         .pipe(gulpPlumber.stop())
         .pipe(browserSync.stream())
         .pipe(gulp.dest('dist/static/css/'));
@@ -75,7 +75,7 @@ function imageMin() {
     return gulp.src(
         ['dev/static/images/**/*.{jpg,png,gif,svg}'],
         ['!dev/static/images/sprite/*'])
-        .pipe(gulpImagemin([
+        .pipe(gulpIf(isBuildFlag, gulpImagemin([
             gulpImagemin.gifsicle({interlaced: true}),
             gulpImagemin.mozjpeg({quality: 75, progressive: true}),
             gulpImagemin.optipng({optimizationLevel: 5}),
@@ -85,7 +85,7 @@ function imageMin() {
                     {cleanupIDs: false}
                 ]
             })
-        ]))
+        ])))
         .pipe(gulp.dest('dist/static/images/'));
 }
 
